@@ -1,0 +1,177 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="net.rizkyzulkarnaen.productgallery.AddActivity"
+    android:orientation="vertical"
+    android:gravity="center" >
+	<ScrollView
+	            android:layout_width="match_parent"
+	            android:layout_height="match_parent"
+	    >
+	    <LinearLayout
+	            android:layout_width="match_parent"
+	            android:layout_height="match_parent"
+	            android:orientation="vertical"
+    			android:gravity="center"
+	        >
+
+	    <ImageView
+	        android:id="@+id/image"
+	        android:layout_width="match_parent"
+	        android:layout_height="200dp"
+	        android:gravity="center"
+	        android:src="@drawable/ic_launcher" />
+	
+	    <LinearLayout
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:gravity="center" >
+	
+	        <Button
+	            android:id="@+id/take"
+	            style="?android:attr/buttonStyleSmall"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:text="@string/take_picture" />
+	        <Button
+	            android:id="@+id/pick"
+	            style="?android:attr/buttonStyleSmall"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:text="@string/pick_gallery" />
+	    </LinearLayout>
+	    <LinearLayout
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:orientation="vertical"
+	        android:layout_gravity="center"
+	        android:gravity="center">
+		    <LinearLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content">
+		        <EditText
+		            android:id="@+id/productNo"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:textColorHint="#0000FF"
+		            android:hint="@string/product_no_hint"
+		            android:ems="10" />
+		        
+		    </LinearLayout>
+		    <LinearLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content">
+		        <EditText
+		            android:id="@+id/productTitle"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:textColorHint="#0000FF"
+		            android:hint="@string/product_title_hint"
+		            android:ems="10" />
+		        
+		    </LinearLayout>
+		    <LinearLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content">
+		        <EditText
+		            android:id="@+id/productEan"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:textColorHint="#0000FF"
+		            android:hint="@string/product_ean_hint"
+		            android:ems="10" />
+		        
+		    </LinearLayout>
+		    <LinearLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content">
+		        <EditText
+		            android:id="@+id/productAsin"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:textColorHint="#0000FF"
+		            android:hint="@string/product_asin_hint"
+		            android:ems="10" />
+		        
+		    </LinearLayout>
+		    <LinearLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content">
+		        <EditText
+		            android:id="@+id/productPrice"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:textColorHint="#0000FF"
+		            android:hint="@string/product_price_hint"
+		            android:ems="10" 
+		            android:inputType="numberDecimal"/>
+		        
+		    </LinearLayout>
+		    <LinearLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content">
+		        <EditText
+		            android:id="@+id/productDesc"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:textColorHint="#0000FF"
+		            android:hint="@string/product_desc_hint"
+		            android:ems="10" 
+		            android:lines="2"
+		            />
+		        
+		    </LinearLayout>
+		    
+		    <LinearLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content">
+		        <EditText
+		            android:id="@+id/productCat1"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:textColorHint="#0000FF"
+		            android:hint="@string/product_cat1_hint"
+		            android:ems="10" 
+		            android:lines="2"
+		            />
+		        
+		    </LinearLayout>
+		    
+		    <LinearLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content">
+		        <EditText
+		            android:id="@+id/productCat2"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:textColorHint="#0000FF"
+		            android:hint="@string/product_cat2_hint"
+		            android:ems="10" 
+		            android:lines="2"
+		            />
+		        
+		    </LinearLayout>
+		    
+		    <LinearLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content">
+		        <EditText
+		            android:id="@+id/productCat3"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:textColorHint="#0000FF"
+		            android:hint="@string/product_cat3_hint"
+		            android:ems="10" 
+		            android:lines="2"
+		            />
+		        
+		    </LinearLayout>
+	    </LinearLayout>
+    </LinearLayout>
+	</ScrollView>
+</LinearLayout>

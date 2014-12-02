@@ -1,11 +1,21 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.productgallery.MainActivity" >
-
+<!--  
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/add_menu"
         android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="@string/action_settings"/>
-
+        android:showAsAction="ifRoom|withText"
+        android:title="@string/action_add"/>
+-->
+    <item
+        android:id="@+id/clear_menu"
+        android:orderInCategory="100"
+        android:showAsAction="ifRoom|withText"
+        android:title="@string/action_clear"/>
+    <item
+        android:id="@+id/import_menu"
+        android:orderInCategory="100"
+        android:showAsAction="ifRoom|withText"
+        android:title="@string/action_import"/>
 </menu>

@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.productgallery"
+    package="net.rizkyzulkarnaen.productgallery"
     android:versionCode="1"
     android:versionName="1.0" >
 
     <uses-sdk
         android:minSdkVersion="16"
         android:targetSdkVersion="19" />
+    <uses-permission android:name="android.permission.READ_INTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+	<uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:allowBackup="true"
@@ -24,12 +27,22 @@
         </activity>
         <activity
             android:name=".ViewActivity"
-            android:parentActivityName=".MainActivity" 
-            android:label="@string/title_activity_view" >
+            android:label="@string/title_activity_view"
+            android:parentActivityName=".MainActivity" >
         </activity>
         <activity
             android:name=".InfoActivity"
-            android:parentActivityName=".MainActivity"  >
+            android:parentActivityName=".MainActivity" >
+        </activity>
+        <activity
+            android:name=".AddActivity"
+            android:label="@string/title_activity_add" 
+            android:parentActivityName=".MainActivity" >
+        </activity>
+        <activity
+            android:name=".ImportFileBrowserActivity"
+            android:label="@string/title_activity_browse" 
+            android:parentActivityName=".MainActivity" >
         </activity>
     </application>
 

@@ -3,12 +3,14 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
              android:layout_width="match_parent"
              android:layout_height="match_parent">
+
     <ImageView
         android:id="@+id/picture"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        />
+        android:scaleType="fitCenter"
+        android:layout_centerInParent="true"
+        android:adjustViewBounds="true" />
     
     <TextView 
         android:id="@+id/text"
@@ -20,6 +22,8 @@
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
         android:paddingTop="15dp"
+        android:textColor="#ffffff"
+        android:background="#50000000"
 		android:text="Test"/>
 
   
