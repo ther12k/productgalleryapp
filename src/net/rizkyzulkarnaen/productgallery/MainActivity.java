@@ -48,6 +48,7 @@ public class MainActivity extends Activity {
             public void onItemClick(AdapterView<?> parent, View v,
                     int position, long id) {
         		Product item = adapter.getItem(position);
+            	showWaitDialog("Open a product","Open : "+item.getNo());
         		Intent intent = new Intent(MainActivity.this, ViewActivity.class);
         		intent.putExtra("id", item.getId());
         		startActivity(intent);
@@ -55,7 +56,11 @@ public class MainActivity extends Activity {
             }
         });
 	}
-	
+	@Override
+	protected void onResume(){
+	    dismissDialogWait();
+	    super.onResume();
+	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -162,7 +167,7 @@ public class MainActivity extends Activity {
 				progressDialog = ProgressDialog.show(this, title, message,
 					false, false);
 				progressDialog.setIndeterminate(true);
-				progressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.pinkprogressbar));
+				progressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.progressbar));
 		}catch(Exception e){
 			e.printStackTrace();
 		}

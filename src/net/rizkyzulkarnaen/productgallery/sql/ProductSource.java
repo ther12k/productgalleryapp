@@ -110,7 +110,7 @@ public class ProductSource {
 	public List<Product> getAll() {
 		List<Product> products = new ArrayList<Product>();
 		try {
-			Cursor cursor = database.query(tableName,allColumns,null, null, null,null,ProductSqlHelper.ID);
+			Cursor cursor = database.query(tableName,allColumns,null, null, null,null,ProductSqlHelper.ID+" DESC");
 			cursor.moveToLast();
 			while (!cursor.isBeforeFirst()) {
 				Product product = cursorToProductNoImage(cursor);
@@ -131,7 +131,7 @@ public class ProductSource {
 		try {
 			Cursor cursor = database.query(tableFieldsName, allFieldsColumns,
 					ProductSqlHelper.ARTICLE_ID + " = ? ", new String[] {
-							ids}, null, null,ProductSqlHelper.ID);
+							ids}, null, null,ProductSqlHelper.ID+" DESC");
 			cursor.moveToLast(); //gara2 lupa ini jadi ngebug semalaman
 			while (!cursor.isBeforeFirst()) {
 				Field field = cursorToField(cursor);

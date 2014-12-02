@@ -32,22 +32,22 @@ public final class R {
         public static final int back_btn=0x7f020001;
         public static final int folder=0x7f020002;
         public static final int ic_launcher=0x7f020003;
-        public static final int pinkprogressbar=0x7f020004;
+        public static final int progressbar=0x7f020004;
     }
     public static final class id {
         public static final int action_close=0x7f090017;
         public static final int action_info=0x7f09001a;
         public static final int action_save=0x7f090016;
         public static final int clear_menu=0x7f090018;
-        public static final int fieldLabel=0x7f090012;
-        public static final int fieldLayout=0x7f09000f;
-        public static final int fieldValue=0x7f090013;
-        public static final int gridview=0x7f090010;
+        public static final int fieldLabel=0x7f090011;
+        public static final int fieldLayout=0x7f09000e;
+        public static final int fieldValue=0x7f090012;
+        public static final int gridview=0x7f09000f;
         public static final int image=0x7f090000;
         public static final int import_menu=0x7f090019;
-        public static final int name=0x7f090011;
+        public static final int name=0x7f090010;
         public static final int pick=0x7f090002;
-        public static final int picture=0x7f090014;
+        public static final int picture=0x7f090013;
         public static final int productAsin=0x7f090006;
         public static final int productCat1=0x7f090009;
         public static final int productCat2=0x7f09000a;
@@ -58,10 +58,10 @@ public final class R {
         public static final int productPrice=0x7f090007;
         public static final int productTitle=0x7f090004;
         public static final int scrollTabs=0x7f09000c;
-        public static final int tabBtn=0x7f09000e;
+        public static final int tabBtn=0x7f090015;
         public static final int tabsLayout=0x7f09000d;
         public static final int take=0x7f090001;
-        public static final int text=0x7f090015;
+        public static final int text=0x7f090014;
     }
     public static final class layout {
         public static final int activity_add=0x7f030000;

@@ -2,19 +2,23 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal" >
+    android:orientation="horizontal" 
+    android:padding="10dp">
 
       <TextView
           android:id="@+id/fieldLabel"
-          android:layout_width="wrap_content"
+          android:layout_width="0dp"
+          android:layout_weight="40"
           android:layout_height="wrap_content"
           android:text="No"
           android:textAppearance="?android:attr/textAppearanceMedium" />
 
       <EditText
           android:id="@+id/fieldValue"
-          android:layout_width="wrap_content"
+          android:layout_width="0dp"
+          android:layout_weight="60"
           android:layout_height="wrap_content"
           android:textColorHint="#0000FF"
+          android:enabled="false"
           android:ems="10" />
 </LinearLayout>

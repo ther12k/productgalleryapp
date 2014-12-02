@@ -23,7 +23,8 @@
         android:paddingRight="10dp"
         android:paddingTop="15dp"
         android:textColor="#ffffff"
-        android:background="#50000000"
+        android:background="#5033b5e5"
+        android:textSize="14sp"
 		android:text="Test"/>
 
   

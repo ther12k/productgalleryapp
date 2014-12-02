@@ -4,6 +4,7 @@ import net.rizkyzulkarnaen.productgallery.entity.Product;
 import net.rizkyzulkarnaen.productgallery.sql.ProductSource;
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Point;
@@ -18,6 +19,7 @@ import android.widget.TextView;
 public class ViewActivity extends Activity {
 	private Product item;
 	private Point laySize = null;
+	private ProgressDialog progressDialog;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -61,7 +63,18 @@ public class ViewActivity extends Activity {
 		getMenuInflater().inflate(R.menu.view, menu);
 		return true;
 	}
-
+	protected void showWaitDialog(String title,String message) {
+		
+		try{
+				progressDialog = ProgressDialog.show(this, title, message,
+					false, false);
+				progressDialog.setIndeterminate(true);
+				progressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.progressbar));
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
 	@Override
 	public boolean onOptionsItemSelected(MenuItem menuItem) {
 		// Handle action bar item clicks here. The action bar will
@@ -69,6 +82,7 @@ public class ViewActivity extends Activity {
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = menuItem.getItemId();
 		if (id == R.id.action_info) {
+			showWaitDialog("Open product info","Open : "+item.getNo());
     		Intent intent = new Intent(ViewActivity.this,InfoActivity.class);
     		intent.putExtra("id", item.getId());
     		startActivity(intent);

@@ -1,5 +1,6 @@
 package net.rizkyzulkarnaen.productgallery;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import net.rizkyzulkarnaen.productgallery.entity.Field;
@@ -23,6 +24,7 @@ import android.widget.TextView;
 public class InfoActivity extends Activity {
 	private LinearLayout fieldLayout;
 	private LinearLayout tabsLayout;
+	private List<String> tabs;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +32,7 @@ public class InfoActivity extends Activity {
 		setContentView(R.layout.activity_info);
 		final Bundle bundleExtra = getIntent().getExtras();
         ActionBar actionBar = getActionBar();
-
+        tabs = new ArrayList<String>();
 		// Enabling Back navigation on Action Bar icon
 		//actionBar.setDisplayHomeAsUpEnabled(true);
         if (bundleExtra != null) {
@@ -46,7 +48,7 @@ public class InfoActivity extends Activity {
 				 LayoutInflater layoutInflater2 = LayoutInflater.from(this);
 				 fieldLayout = (LinearLayout)findViewById(R.id.fieldLayout);
 				 tabsLayout = (LinearLayout)findViewById(R.id.tabsLayout);
-				 String tab = "";
+
 				 String firstTab = "";
 				 for(final Field field:fields){
 					 final LinearLayout fieldItem = (LinearLayout) layoutInflater.inflate(
@@ -55,22 +57,22 @@ public class InfoActivity extends Activity {
 					 EditText value = (EditText)fieldItem.findViewById(R.id.fieldValue);
 					 label.setText(field.getName());
 					 value.setText(field.getValue());
-					 fieldItem.setTag(field.getCategory());
+					 fieldItem.setTag(new TabId(field.getCategory(),field.getId()));
 					 fieldLayout.addView(fieldItem);
-					 if(tab.length()==0||!tab.equals(field.getCategory())){
-						 if(tab.length()==0) firstTab = tab;
-						 tab = field.getCategory();
+					 if(tabs.indexOf(field.getCategory())==-1){
+						 if(firstTab.length()==0) firstTab = field.getCategory();
+						 //tab = field.getCategory();
 
 						 final LinearLayout tabItem = (LinearLayout) layoutInflater2.inflate(
 									R.layout.tab_item, null);
 						 final Button btn = (Button)tabItem.findViewById(R.id.tabBtn);
-						 btn.setText(tab);
+						 btn.setText(field.getCategory());
 						 btn.setOnClickListener(new OnClickListener() {
 							public void onClick(View v) {
 								for(int i=0;i<fieldLayout.getChildCount();i++){
 									LinearLayout row = (LinearLayout)fieldLayout.getChildAt(i);
-									String tab = (String)row.getTag();
-									if(tab.equals(field.getCategory())){
+									TabId tab = (TabId)row.getTag();
+									if(tab.getTab().equals(field.getCategory())){
 										row.setVisibility(View.VISIBLE);
 									}else{
 										row.setVisibility(View.GONE);
@@ -80,11 +82,12 @@ public class InfoActivity extends Activity {
 								btn.setTextColor(Color.BLACK);
 							}
 						 });
-
+						 tabs.add(field.getCategory());
 						 tabsLayout.addView(tabItem);
 					 }
 					 
 				 }
+				 /*
 				 for(int i=0;i<fieldLayout.getChildCount();i++){
 					LinearLayout row = (LinearLayout)fieldLayout.getChildAt(i);
 					String tabTag = (String)row.getTag();
@@ -100,6 +103,12 @@ public class InfoActivity extends Activity {
 					 btn.setTextColor(Color.BLACK);
 					 fieldLayout.invalidate();
 					 tabsLayout.invalidate();
+				 }
+				 */
+				 if(tabsLayout.getChildCount()>0){
+					 LinearLayout row = (LinearLayout)tabsLayout.getChildAt(0);
+					 Button btn = (Button)row.findViewById(R.id.tabBtn);
+					 btn.callOnClick();
 				 }
 			 }
 
@@ -134,5 +143,27 @@ public class InfoActivity extends Activity {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+	
+	public class TabId{
+		private String tab;
+		private long id = 0;
+		
+		public TabId(String tab, long id){
+			this.id = id;
+			this.setTab(tab);
+		}
+		public long getId() {
+			return id;
+		}
+		public void setId(long id) {
+			this.id = id;
+		}
+		public String getTab() {
+			return tab;
+		}
+		public void setTab(String tab) {
+			this.tab = tab;
+		}
 	}
 }
