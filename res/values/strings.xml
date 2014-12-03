@@ -7,24 +7,17 @@
     <string name="action_add">ADD</string>
     <string name="action_clear">CLEAR</string>
     <string name="action_import">IMPORT</string>
+    <string name="action_export">EXPORT</string>
     <string name="title_activity_view">ViewActivity</string>
-    <string name="action_info">Info</string>
-    <string name="action_close">Close</string>
-    <string name="action_save">Save</string>
+    <string name="action_info">INFO</string>
+    <string name="action_close">CLOSE</string>
+    <string name="action_save">SAVE</string>
+    <string name="action_edit">EDIT</string>
     <string name="title_activity_add">AddActivity</string>
     <string name="title_activity_browse">BrowseActivity</string>
     
     <string name="take_picture">[Take Picture]</string>
     <string name="pick_gallery">[Pick Gallery]</string>
-    <string name="product_no_hint">ArtikelNo</string>
-    <string name="product_title_hint">Title</string>
-    <string name="product_ean_hint">EAN</string>
-    <string name="product_asin_hint">ASIN</string>
-    <string name="product_desc_hint">Description</string>
-    <string name="product_price_hint">Sale Price</string>
-    <string name="product_cat1_hint">Category 1</string>
-    <string name="product_cat2_hint">Category 2</string>
-    <string name="product_cat3_hint">Category 3</string>
     
     
     <string name="empty_title">Empty title</string>

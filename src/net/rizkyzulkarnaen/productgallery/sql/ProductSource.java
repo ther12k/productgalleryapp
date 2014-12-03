@@ -88,7 +88,13 @@ public class ProductSource {
 		return database.update(tableFieldsName, values,
 				ProductSqlHelper.ID + " = " + ids, null);
 	}
-	
+	public int updateField(long id,String value) {
+		String ids = Long.toString(id);
+		ContentValues values = new ContentValues();
+		values.put(ProductSqlHelper.VALUE, value);
+		return database.update(tableFieldsName, values,
+				ProductSqlHelper.ID + " = " + ids, null);
+	}
 	public int updateImage(long id,String image) {
 		ContentValues values = new ContentValues();
 		values.put(ProductSqlHelper.IMAGE, image);
@@ -103,8 +109,8 @@ public class ProductSource {
 	}
 	
 	public void deleteAll() {
-		database.delete(tableName, "1", null);
-		database.delete(tableFieldsName, "1", null);
+		database.delete(tableName, null, null);
+		database.delete(tableFieldsName, null, null);
 	}
 
 	public List<Product> getAll() {
@@ -132,6 +138,25 @@ public class ProductSource {
 			Cursor cursor = database.query(tableFieldsName, allFieldsColumns,
 					ProductSqlHelper.ARTICLE_ID + " = ? ", new String[] {
 							ids}, null, null,ProductSqlHelper.ID+" DESC");
+			cursor.moveToLast(); //gara2 lupa ini jadi ngebug semalaman
+			while (!cursor.isBeforeFirst()) {
+				Field field = cursorToField(cursor);
+				fields.add(field);
+				cursor.moveToPrevious();
+			}
+		} catch (Exception e) {
+			Log.e("error get", e.getMessage());
+		}
+		return fields;
+	}
+	
+	public List<Field> getFieldsSortByTab(long id) {
+		List<Field> fields = new ArrayList<Field>();
+		String ids = Long.toString(id);
+		try {
+			Cursor cursor = database.query(tableFieldsName, allFieldsColumns,
+					ProductSqlHelper.ARTICLE_ID + " = ? ", new String[] {
+							ids}, null, null,ProductSqlHelper.CATEGORY+" DESC,"+ProductSqlHelper.NAME+" DESC");
 			cursor.moveToLast(); //gara2 lupa ini jadi ngebug semalaman
 			while (!cursor.isBeforeFirst()) {
 				Field field = cursorToField(cursor);

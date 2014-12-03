@@ -3,9 +3,9 @@
     tools:context="com.example.productgallery.ViewwActivity" >
 
     <item
-        android:id="@+id/action_close"
+        android:id="@+id/action_edit"
         android:orderInCategory="100"
         android:showAsAction="ifRoom|withText"
-        android:title="@string/action_close"/>
+        android:title="@string/action_edit"/>
 
 </menu>

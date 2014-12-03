@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="net.rizkyzulkarnaen.productgallery"
-    android:versionCode="5"
-    android:versionName="1.5" >
+    android:versionCode="7"
+    android:versionName="1.7" >
 
     <uses-sdk
         android:minSdkVersion="16"
         android:targetSdkVersion="19" />
     <uses-permission android:name="android.permission.READ_INTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_INTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 	<uses-permission android:name="android.permission.CAMERA" />
 
     <application
@@ -32,7 +34,8 @@
         </activity>
         <activity
             android:name=".InfoActivity"
-            android:parentActivityName=".MainActivity" >
+            android:parentActivityName=".MainActivity"
+            android:windowSoftInputMode="stateAlwaysHidden" >
         </activity>
         <activity
             android:name=".AddActivity"

@@ -1,5 +1,6 @@
 package net.rizkyzulkarnaen.productgallery;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -16,7 +17,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
+import android.util.LruCache;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,16 +35,31 @@ public class MainActivity extends Activity {
 	GalleryAdapter adapter;
 	private ProgressDialog progressDialog;
 	private Point laySize = null;
+	private boolean opened = false;
+	private LruCache<String, Bitmap> mMemoryCache;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+
+		final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+
+	    // Use 1/8th of the available memory for this memory cache.
+	    final int cacheSize = maxMemory / 4;
+
+	    mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
+	        @Override
+	        protected int sizeOf(String key, Bitmap bitmap) {
+	            // The cache size will be measured in kilobytes rather than
+	            // number of items.
+	            return bitmap.getByteCount() / 1024;
+	        }
+	    };
 		Display display = getWindowManager().getDefaultDisplay();
 		laySize = new Point();
 		display.getSize(laySize);
 		final GridView gridView = (GridView) findViewById(R.id.gridview);
-	 	adapter = new GalleryAdapter(this,laySize);
+	 	adapter = new GalleryAdapter(this,laySize,mMemoryCache);
 	 	gridView.setAdapter(adapter);
 		gridView.setOnItemClickListener(new OnItemClickListener() {
             @Override
@@ -52,13 +70,18 @@ public class MainActivity extends Activity {
         		Intent intent = new Intent(MainActivity.this, ViewActivity.class);
         		intent.putExtra("id", item.getId());
         		startActivity(intent);
+        		opened = true;
         		//finish();
             }
         });
+		gridView.invalidate();
 	}
 	@Override
 	protected void onResume(){
-	    dismissDialogWait();
+	    if(opened){
+	    	dismissDialogWait();
+	    	opened = false;
+	    }
 	    super.onResume();
 	}
 
@@ -94,6 +117,18 @@ public class MainActivity extends Activity {
 								productSource.open();
 								productSource.deleteAll();
 								productSource.close();
+								final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+
+							    // Use 1/8th of the available memory for this memory cache.
+							    final int cacheSize = maxMemory / 4;
+								mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
+							        @Override
+							        protected int sizeOf(String key, Bitmap bitmap) {
+							            // The cache size will be measured in kilobytes rather than
+							            // number of items.
+							            return bitmap.getByteCount() / 1024;
+							        }
+							    };
 								Intent intent = new Intent(MainActivity.this, MainActivity.class);
 								startActivity(intent);
 								finish();
@@ -110,6 +145,11 @@ public class MainActivity extends Activity {
 			case R.id.import_menu:
 				Intent i = new Intent(MainActivity.this, ImportFileBrowserActivity.class);
 	    		startActivityForResult(i,IMPORT);
+				return true;
+			case R.id.export_menu:
+				ExportTask task = new ExportTask();
+				String[] params = {""};
+				task.execute(params); 
 				return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -200,6 +240,7 @@ public class MainActivity extends Activity {
 
 		protected void onPreExecute() {
 			showWaitDialog("Import Data","Wait");
+			
 		}
 
 		@Override
@@ -264,44 +305,62 @@ public class MainActivity extends Activity {
 						}
 					}else if (ze.getName().toString().endsWith(".jpeg")||
 							ze.getName().toString().endsWith(".jpg")) { 
-						Log.v("Decompress", "Unzipping " + ze.getName());
-						/*
-						ByteArrayOutputStream sb = new ByteArrayOutputStream(); 
-				        long iSize   = 0;
-				        int iReaded = 0;
-						byte buffer[]  = new byte[BLOCKSIZE];
-			            long iTotal  = ze.getSize();
-
-			            while ((iReaded = zin.read(buffer,0,BLOCKSIZE)) > 0 && ((iSize+=iReaded) <= iTotal) ) 
-			            {   
-			            	sb.write(buffer,0,iReaded);
-			            }
-			            */
-			            Bitmap photo = BitmapFactory.decodeStream(zin);
-			            Bitmap bitmap = Bitmap.createScaledBitmap(photo,
-								(int) (laySize.x),
-								(int) (laySize.y), true);
-				        photo.recycle();
-			            zin.closeEntry(); 
-						productSource.open();
-						String name = "";
-						if(ze.getName().toString().endsWith(".jpeg"))
-							name = ze.getName().replace(".jpeg", "");
-						else
-							name = ze.getName().replace(".jpg", "");
-						name = name.trim();
-						Product product = productSource.getByNo(name);
-						
-						if(product!=null){
-							productSource.updateImage(product.getId(),Helper.bitmapToString(bitmap));
-						}else{
-							product = new Product();
-							product.setNo(name);
-							product.setImage(Helper.bitmapToString(bitmap));
-							productSource.create(product);
+						try{
+							Log.v("Decompress", "Unzipping " + ze.getName());
+							/*
+							ByteArrayOutputStream sb = new ByteArrayOutputStream(); 
+					        long iSize   = 0;
+					        int iReaded = 0;
+							byte buffer[]  = new byte[BLOCKSIZE];
+				            long iTotal  = ze.getSize();
+	
+				            while ((iReaded = zin.read(buffer,0,BLOCKSIZE)) > 0 && ((iSize+=iReaded) <= iTotal) ) 
+				            {   
+				            	sb.write(buffer,0,iReaded);
+				            }
+				            */
+				            Bitmap photo = BitmapFactory.decodeStream(zin);
+				            int width = photo.getWidth();
+				            int height = photo.getHeight();
+				            int maxSize = Math.max(laySize.x, laySize.y);
+				            float scale = 1;
+				            if(width>height){
+				            	if(maxSize<width)
+				            		scale = maxSize/width;
+				            }else{
+				            	if(maxSize<height)
+				            		scale = maxSize/height;
+				            }
+				            width = (int)(scale*width);
+				            height = (int)(scale*height);
+				            Bitmap bitmap = Bitmap.createScaledBitmap(photo,
+				            		width,
+									height, true);
+					        //photo.recycle();
+				            zin.closeEntry(); 
+				            //photo.recycle();
+							productSource.open();
+							String name = "";
+							if(ze.getName().toString().endsWith(".jpeg"))
+								name = ze.getName().replace(".jpeg", "");
+							else
+								name = ze.getName().replace(".jpg", "");
+							name = name.trim();
+							Product product = productSource.getByNo(name);
+							
+							if(product!=null){
+								productSource.updateImage(product.getId(),Helper.bitmapToString(bitmap));
+							}else{
+								product = new Product();
+								product.setNo(name);
+								product.setImage(Helper.bitmapToString(bitmap));
+								productSource.create(product);
+							}
+							productSource.close();
+							bitmap.recycle();
+						}catch(Exception e){
+							Log.e("Decompress", "unzip "+ze.getName(), e); 
 						}
-						productSource.close();
-						bitmap.recycle();
 					}
 			    } 
 				zin.close();
@@ -334,4 +393,37 @@ public class MainActivity extends Activity {
 		}
 	}
 
+	
+	/**
+	 * Represents an asynchronous login/registration task used to authenticate
+	 * the user.
+	 */
+	public class ExportTask extends AsyncTask<String, Void, Integer> {
+		private int ERROR = -1;
+		private int SUCCESS = 0;
+		protected void onPreExecute() {
+			showWaitDialog("Export Data","Wait");
+		}
+
+		@Override
+		protected Integer doInBackground(String... params) {
+			Export export = new Export(MainActivity.this,Environment.getExternalStorageDirectory() + File.separator+"Download"+File.separator+"data.zip");
+			return export.makeZip();
+		}
+
+		@Override
+		protected void onPostExecute(final Integer status) {
+			dismissDialogWait();
+			if(status==SUCCESS){
+				//Intent i = new Intent(MainActivity.this, MainActivity.class);
+	    		//startActivity(i);
+				//finish();
+			}
+		}
+
+		@Override
+		protected void onCancelled() {
+			dismissDialogWait();
+		}
+	}
 }

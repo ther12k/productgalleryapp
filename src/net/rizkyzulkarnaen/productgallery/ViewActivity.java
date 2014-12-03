@@ -42,15 +42,13 @@ public class ViewActivity extends Activity {
 				 nameView.setText(item.getNo());
 				 
 				 if(item.getImageBitmap()!=null){
-					 Bitmap photo = item.getImageBitmap();
-		        	Bitmap bitmap = Bitmap.createScaledBitmap(photo,
-								(int) (laySize.x),
-								(int) (laySize.y), true);
+					Bitmap bitmap = item.getImageBitmap();
 		        	imageView.setImageBitmap(bitmap);
 					actionBar.setLogo(new BitmapDrawable(getResources(), bitmap));
 					item.setFields(productSource.getFields(item.getId()));
 		        	//photo.recycle();
-					 actionBar.setTitle(item.getNo());
+					actionBar.setTitle(item.getNo());
+					imageView.invalidate();
 				 }
 				 productSource.close();
 			 }
@@ -66,7 +64,7 @@ public class ViewActivity extends Activity {
 	protected void showWaitDialog(String title,String message) {
 		
 		try{
-				progressDialog = ProgressDialog.show(this, title, message,
+				progressDialog = ProgressDialog.show(ViewActivity.this, title, message,
 					false, false);
 				progressDialog.setIndeterminate(true);
 				progressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.progressbar));

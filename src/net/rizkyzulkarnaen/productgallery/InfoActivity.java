@@ -8,6 +8,7 @@ import net.rizkyzulkarnaen.productgallery.entity.Product;
 import net.rizkyzulkarnaen.productgallery.sql.ProductSource;
 import android.app.ActionBar;
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
@@ -15,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,21 +27,27 @@ public class InfoActivity extends Activity {
 	private LinearLayout fieldLayout;
 	private LinearLayout tabsLayout;
 	private List<String> tabs;
+	private boolean edit = false;
+	private ProductSource productSource;
+	private Product item;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_info);
+		getWindow().setSoftInputMode(
+				WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 		final Bundle bundleExtra = getIntent().getExtras();
         ActionBar actionBar = getActionBar();
         tabs = new ArrayList<String>();
 		// Enabling Back navigation on Action Bar icon
 		//actionBar.setDisplayHomeAsUpEnabled(true);
         if (bundleExtra != null) {
+			 if(bundleExtra.containsKey("edit")) edit = true;
 			 if(bundleExtra.containsKey("id")){
-				 ProductSource productSource = new ProductSource(this);
+				 productSource = new ProductSource(this);
 				 productSource.open();
-				 Product item = productSource.get(bundleExtra.getLong("id"));
+				 item = productSource.get(bundleExtra.getLong("id"));
 				 List<Field> fields = productSource.getFields(item.getId());
 				 productSource.close();
 				 actionBar.setLogo(new BitmapDrawable(getResources(), item.getImageBitmap()));
@@ -50,16 +58,19 @@ public class InfoActivity extends Activity {
 				 tabsLayout = (LinearLayout)findViewById(R.id.tabsLayout);
 
 				 String firstTab = "";
+				 int count=0;
 				 for(final Field field:fields){
 					 final LinearLayout fieldItem = (LinearLayout) layoutInflater.inflate(
 								R.layout.field_item, null);
 					 TextView label = (TextView)fieldItem.findViewById(R.id.fieldLabel);
 					 EditText value = (EditText)fieldItem.findViewById(R.id.fieldValue);
+					 if(count++>1)
+						 if(edit) value.setEnabled(true);
 					 label.setText(field.getName());
 					 value.setText(field.getValue());
 					 fieldItem.setTag(new TabId(field.getCategory(),field.getId()));
 					 fieldLayout.addView(fieldItem);
-					 if(tabs.indexOf(field.getCategory())==-1){
+					 if(!tabs.contains(field.getCategory())){
 						 if(firstTab.length()==0) firstTab = field.getCategory();
 						 //tab = field.getCategory();
 
@@ -78,7 +89,7 @@ public class InfoActivity extends Activity {
 										row.setVisibility(View.GONE);
 									}
 								}
-								hideAllBtn();
+								clearAllBtn();
 								btn.setTextColor(Color.BLACK);
 							}
 						 });
@@ -117,7 +128,7 @@ public class InfoActivity extends Activity {
         
 	}
 	
-	private void hideAllBtn(){
+	private void clearAllBtn(){
 		for(int i=0;i<tabsLayout.getChildCount();i++){
 			LinearLayout row = (LinearLayout)tabsLayout.getChildAt(i);
 			Button btn = (Button)row.findViewById(R.id.tabBtn);
@@ -128,21 +139,48 @@ public class InfoActivity extends Activity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.view, menu);
+		if(edit)
+			getMenuInflater().inflate(R.menu.editinfo, menu);
+		else
+			getMenuInflater().inflate(R.menu.info, menu);
 		return true;
 	}
 
 	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
+	public boolean onOptionsItemSelected(MenuItem menuItem) {
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
+		int id = menuItem.getItemId();
+		if (id == R.id.action_edit) {
+			Intent i = new Intent(InfoActivity.this, InfoActivity.class);
+			i.putExtra("id",item.getId());
+			i.putExtra("edit", true);
+    		startActivity(i);
+			finish();
+			return true;
+		}
 		if (id == R.id.action_close) {
 			finish();
 			return true;
 		}
-		return super.onOptionsItemSelected(item);
+		if (id == R.id.action_save) {
+			for(int i=0;i<fieldLayout.getChildCount();i++){
+				LinearLayout row = (LinearLayout)fieldLayout.getChildAt(i);
+				EditText valueView = (EditText)row.findViewById(R.id.fieldValue);
+				String value = valueView.getText().toString();
+				TabId tabId = (TabId)row.getTag();
+				productSource.open();
+				productSource.updateField(tabId.getId(),value);
+				productSource.close();
+			}
+			Intent i = new Intent(InfoActivity.this, InfoActivity.class);
+			i.putExtra("id",item.getId());
+    		startActivity(i);
+			finish();
+			return true;
+		}
+		return super.onOptionsItemSelected(menuItem);
 	}
 	
 	public class TabId{

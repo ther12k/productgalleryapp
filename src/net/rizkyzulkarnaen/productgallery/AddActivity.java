@@ -79,37 +79,16 @@ public class AddActivity extends Activity {
 		int id = item.getItemId();
 		if (id == R.id.action_save) {
 			ProductSource productSource = new ProductSource(this);
-			EditText titleView = (EditText) findViewById(R.id.productTitle);
 			EditText noView = (EditText) findViewById(R.id.productNo);
-			EditText eanView = (EditText) findViewById(R.id.productEan);
-			EditText asinView = (EditText) findViewById(R.id.productAsin);
-			EditText descView = (EditText) findViewById(R.id.productDesc);
-			EditText priceView = (EditText) findViewById(R.id.productPrice);
-			EditText cat1View = (EditText) findViewById(R.id.productCat1);
-			EditText cat2View = (EditText) findViewById(R.id.productCat2);
-			EditText cat3View = (EditText) findViewById(R.id.productCat3);
 			boolean error = false;
-			if (TextUtils.isEmpty(titleView.getText().toString())) {
-				titleView.setError(getString(R.string.empty_title));
-				error = true;
-			}
+			
 			if (TextUtils.isEmpty(noView.getText().toString())){
 				noView.setError(getString(R.string.empty_no));
 				error = true;
 			}
 			if(!error){
 				product.setNo(noView.getText().toString());
-				product.setEan(eanView.getText().toString());
-				product.setAsin(asinView.getText().toString());
-				product.setDesc(descView.getText().toString());
-				product.setCat1(cat1View.getText().toString());
-				product.setCat2(cat2View.getText().toString());
-				product.setCat3(cat3View.getText().toString());
-				try{
-					product.setPrice(Float.parseFloat(priceView.getText().toString()));
-				}catch(Exception e){
-					
-				}
+				
 				productSource.open();
 				productSource.create(product);
 				productSource.close();

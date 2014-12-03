@@ -24,26 +24,14 @@ public class GalleryAdapter extends BaseAdapter {
 	    private ProductSource productSource;
 		private LruCache<String, Bitmap> mMemoryCache;
 	    
-	    public GalleryAdapter(Context context,Point laySize) {
+	    public GalleryAdapter(Context context,Point laySize,LruCache<String, Bitmap> mMemoryCache) {
 	        inflater = LayoutInflater.from(context);
 	        this.laySize = laySize;
+	        this.mMemoryCache = mMemoryCache;
 			productSource = new ProductSource(context);
 			productSource.open();
 			items = (ArrayList<Product>) productSource.getAll();
 			productSource.close();
-			final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
-
-		    // Use 1/8th of the available memory for this memory cache.
-		    final int cacheSize = maxMemory / 4;
-
-		    mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
-		        @Override
-		        protected int sizeOf(String key, Bitmap bitmap) {
-		            // The cache size will be measured in kilobytes rather than
-		            // number of items.
-		            return bitmap.getByteCount() / 1024;
-		        }
-		    };
 	    }
 
 		
@@ -102,12 +90,17 @@ public class GalleryAdapter extends BaseAdapter {
 	        	item = (Product)getItemWImage(i);
 	        	if(item.getImageBitmap()!=null){
 		        	Bitmap photo = item.getImageBitmap();
+		        	int width = photo.getWidth();
+		            int height = photo.getHeight();
 		        	bitmap = Bitmap.createScaledBitmap(photo,
-								(int) (laySize.x/4),
-								(int) (laySize.y/4), true);
+								width/2,
+								height/2, true);
 		        	addBitmapToMemoryCache(String.valueOf(item.getId()),bitmap);
-		        	picture.setImageBitmap(bitmap);
+		        	picture.setImageBitmap(getBitmapFromMemCache(String.valueOf(item.getId())));
 		        	photo.recycle();
+		        	//bitmap.recycle();
+	        	}else{
+	        		picture.setImageResource(R.drawable.ic_launcher);
 	        	}
 	        }
 
