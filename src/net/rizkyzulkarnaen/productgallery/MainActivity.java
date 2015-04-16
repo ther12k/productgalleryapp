@@ -1,47 +1,55 @@
 package net.rizkyzulkarnaen.productgallery;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
 import net.rizkyzulkarnaen.productgallery.entity.Product;
-import net.rizkyzulkarnaen.productgallery.sql.ProductSource;
-import android.app.Activity;
+import net.rizkyzulkarnaen.productgallery.sql.DropboxProductSource;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Point;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
-import android.util.Log;
+import android.text.InputType;
 import android.util.LruCache;
-import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity {
+import com.dropbox.sync.android.DbxAccount;
+import com.dropbox.sync.android.DbxDatastore;
+import com.dropbox.sync.android.DbxDatastoreManager;
+import com.dropbox.sync.android.DbxException;
+
+public class MainActivity extends BasicActivity{
 	private final int ADD = 1;
 	private final int IMPORT = 2;
+	private final int EXPORT = 3;
 	GalleryAdapter adapter;
-	private ProgressDialog progressDialog;
-	private Point laySize = null;
 	private boolean opened = false;
 	private LruCache<String, Bitmap> mMemoryCache;
+	private MenuItem linkMenu;
+	private DbxDatastore datastore;
+
+    static final int REQUEST_LINK_TO_DBX = 0;
+    Button linkUnlinkButton;
+    EditText listInput;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
+		try {
+            // Open the right datastore (list).
+            datastore = datastoreManager.openDefaultDatastore();
+            datastore.sync();
+        } catch (DbxException e) {
+            e.printStackTrace();
+        }
 		final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
 
 	    // Use 1/8th of the available memory for this memory cache.
@@ -55,26 +63,7 @@ public class MainActivity extends Activity {
 	            return bitmap.getByteCount() / 1024;
 	        }
 	    };
-		Display display = getWindowManager().getDefaultDisplay();
-		laySize = new Point();
-		display.getSize(laySize);
-		final GridView gridView = (GridView) findViewById(R.id.gridview);
-	 	adapter = new GalleryAdapter(this,laySize,mMemoryCache);
-	 	gridView.setAdapter(adapter);
-		gridView.setOnItemClickListener(new OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View v,
-                    int position, long id) {
-        		Product item = adapter.getItem(position);
-            	showWaitDialog("Open a product","Open : "+item.getNo());
-        		Intent intent = new Intent(MainActivity.this, ViewActivity.class);
-        		intent.putExtra("id", item.getId());
-        		startActivity(intent);
-        		opened = true;
-        		//finish();
-            }
-        });
-		gridView.invalidate();
+        
 	}
 	@Override
 	protected void onResume(){
@@ -83,12 +72,47 @@ public class MainActivity extends Activity {
 	    	opened = false;
 	    }
 	    super.onResume();
+
+        try {
+            // Open the right datastore (list).
+            datastore = datastoreManager.openDefaultDatastore();
+            datastore.sync();
+        } catch (DbxException e) {
+            e.printStackTrace();
+        }
+
+        // Listen for changes to this list (datastore).
+        datastore.addSyncStatusListener(new DbxDatastore.SyncStatusListener() {
+            @Override
+            public void onDatastoreStatusChange(DbxDatastore dbxDatastore) {
+                updateList();
+            }
+        });
+	    super.onResume();
 	}
+	
+	@Override
+    public void onPause() {
+        super.onPause();
+        datastore.removeSyncStatusListener(new DbxDatastore.SyncStatusListener() {
+            @Override
+            public void onDatastoreStatusChange(DbxDatastore dbxDatastore) {
+                
+            }
+        });
+        datastore.close();
+    }
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
+		linkMenu=menu.findItem(R.id.link_menu);
+		if (!accountManager.hasLinkedAccount()) {
+			linkMenu.setTitle(R.string.action_link);
+        } else {
+            linkMenu.setTitle(R.string.action_unlink);
+        }
 		return true;
 	}
 
@@ -113,10 +137,13 @@ public class MainActivity extends Activity {
 
 							@Override
 							public void onYes() {
-								ProductSource productSource = new ProductSource(MainActivity.this);
-								productSource.open();
-								productSource.deleteAll();
-								productSource.close();
+								DropboxProductSource productSource = new DropboxProductSource(MainActivity.this,datastore);
+								try {
+									productSource.deleteAll();
+								} catch (DbxException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
 								final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
 
 							    // Use 1/8th of the available memory for this memory cache.
@@ -147,37 +174,24 @@ public class MainActivity extends Activity {
 	    		startActivityForResult(i,IMPORT);
 				return true;
 			case R.id.export_menu:
-				ExportTask task = new ExportTask();
-				String[] params = {""};
-				task.execute(params); 
+				Intent intent = new Intent(MainActivity.this, ExportFileBrowserActivity.class);
+	    		startActivityForResult(intent,EXPORT);
+				
+				return true;
+			case R.id.link_menu:
+				if (!accountManager.hasLinkedAccount()) {
+                    // If we're not already linked, start the linking process.
+                    accountManager.startLink(this, REQUEST_LINK_TO_DBX);
+                } else {
+                    // If we're linked, unlink and start using a local datastore manager again.
+                    accountManager.unlink();
+                    datastoreManager = DbxDatastoreManager.localManager(accountManager);
+                    linkMenu.setTitle(R.string.action_unlink);
+                }
+				
 				return true;
 		}
 		return super.onOptionsItemSelected(item);
-	}
-	
-	protected void showYesNoMsg(int idTitle,int idMessage,final YesNoMsgAction yesno ){
-		AlertDialog.Builder alert = new AlertDialog.Builder(this);
-		alert.setTitle(idTitle);
-		alert.setMessage(idMessage);
-		alert.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-
-		    @Override
-		    public void onClick(DialogInterface dialog, int which) {
-		        // I do not need any action here you might
-		    	yesno.onNo();
-		        dialog.dismiss();
-		    }
-		});
-		alert.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-			
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
-				yesno.onYes();
-				return;
-			}
-		});
-		alert.show();
 	}
 	
 	public void onActivityResult(int requestCode, int resultCode,Intent intent){
@@ -195,46 +209,116 @@ public class MainActivity extends Activity {
 					String[] params = {path};
 					task.execute(params); 
 					break;
+				case EXPORT:
+					 final String basepath = intent.getExtras().getString("file");
+					 AlertDialog.Builder builder = new AlertDialog.Builder(this);
+					 builder.setTitle("Input file name");
+
+					 // Set up the input
+					 final EditText input = new EditText(this);
+					 // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+					 input.setInputType(InputType.TYPE_CLASS_TEXT);
+					 builder.setView(input);
+
+					 // Set up the buttons
+					 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() { 
+					     @Override
+					     public void onClick(DialogInterface dialog, int which) {
+					         String path = input.getText().toString();
+					         ExportTask task = new ExportTask();
+							 String[] params = {basepath+"/"+path+".zip"};
+							 task.execute(params); 
+					     }
+					 });
+					 builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+					     @Override
+					     public void onClick(DialogInterface dialog, int which) {
+					         dialog.cancel();
+					     }
+					 });
+
+					 builder.show();
+					 break;
+				case REQUEST_LINK_TO_DBX:
+					 DbxAccount account = accountManager.getLinkedAccount();
+	                 try {
+	                    // Migrate any local datastores.
+	                    datastoreManager.migrateToAccount(account);
+	                    // Start using the remote datastore manager.
+	                    datastoreManager = DbxDatastoreManager.forAccount(account);
+	                    setUpDropboxListeners();
+	                 } catch (DbxException e) {
+	                    e.printStackTrace();
+	                 }
+	                 // Swap the menu title.
+	                 linkMenu.setTitle(R.string.action_unlink);
+		             
 			}
 		}
+
 		//finish();//back to main
 		super.onActivityResult(requestCode, resultCode, intent);
 		return;
 	}
-	protected void showWaitDialog(String title,String message) {
-		
-		try{
-				progressDialog = ProgressDialog.show(this, title, message,
-					false, false);
-				progressDialog.setIndeterminate(true);
-				progressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.progressbar));
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
-	}
+
 	
-	/**
-	 * Close progress dialog if still show
-	 */
-	protected void dismissDialogWait() {
-		try{
-			if (progressDialog != null) {
-				if (progressDialog.isShowing()) {
-					progressDialog.dismiss();
-				}
-			}
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-	}
+	private void setUpDropboxListeners() {
+        datastoreManager.addListListener(new DbxDatastoreManager.ListListener() {
+            @Override
+            public void onDatastoreListChange(DbxDatastoreManager dbxDatastoreManager) {
+                // Update the UI when the list of datastores changes.
+                MainActivity.this.updateList();
+            }
+        });
+        updateList();
+    }
+	
+	// Update the UI based on the current list of datastores.
+    private void updateList() {
+    	final GridView gridView = (GridView) findViewById(R.id.gridview);
+    	/*
+        ArrayList<DbxDatastoreInfo> infos = new ArrayList<DbxDatastoreInfo>();
+        try {
+            infos.addAll(datastoreManager.listDatastores());
+        } catch (DbxException e) {
+            e.printStackTrace();
+        }
+        // Sort by the modified time.
+        Collections.sort(infos,
+            new Comparator<DbxDatastoreInfo>() {
+                @Override
+                public int compare(DbxDatastoreInfo a, DbxDatastoreInfo b) {
+                    if (a.mtime != null && b.mtime != null) {
+                        return a.mtime.compareTo(b.mtime);
+                    } else {
+                        return a.id.compareTo(b.id);
+                    }
+                }
+            });
+    	 */
+	 	adapter = new GalleryAdapter(this,datastore,laySize,mMemoryCache);
+        gridView.setAdapter(adapter);
+		gridView.setOnItemClickListener(new OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View v,
+                    int position, long id) {
+        		Product item = adapter.getItem(position);
+            	showWaitDialog("Open a product","Open : "+item.getNo());
+        		Intent intent = new Intent(MainActivity.this, ViewActivity.class);
+        		intent.putExtra("id", item.getId());
+        		startActivity(intent);
+        		opened = true;
+        		//finish();
+            }
+        });
+		gridView.invalidate();
+    }
 	
 	/**
 	 * Represents an asynchronous login/registration task used to authenticate
 	 * the user.
 	 */
 	public class ImportTask extends AsyncTask<String, Void, Integer> {
-		private int ERROR = -1;
 		private int SUCCESS = 0;
 		private int NO_CSV = 1;
 
@@ -245,130 +329,14 @@ public class MainActivity extends Activity {
 
 		@Override
 		protected Integer doInBackground(String... params) {
-
-			ProductSource productSource = new ProductSource(MainActivity.this);
-			String csv = "";
-			String[] tabs=null;
-			String[] fields=null;
 			String path = params[0];
-			try{ 
-				FileInputStream fin = new FileInputStream(path); 
-				ZipInputStream zin = new ZipInputStream(fin); 
-				ZipEntry ze = null; 
-				while ((ze = zin.getNextEntry()) != null&& !ze.isDirectory()) { 
-					Log.v("Decompress", "Unzipping " + ze.getName()); 
-			        
-					if (ze.getName().toString().equalsIgnoreCase("import.csv")) { 
-					   
-						StringBuilder sb = new StringBuilder();
-						for (int c = zin.read(); c != -1; c = zin.read()) {
-						    sb.append((char)c);
-						}
-						csv = sb.toString();
-						
-						zin.closeEntry(); 
-						if(csv.length()>0){
-							final String[] lines = csv.toString().split("\n");  
-							int row=0;
-			                for(String line : lines)
-			                {
-			                	row++;
-			                    
-			                	if(row==1){
-			                		tabs = line.split(";");
-			                	}else if(row==2){
-			                		fields = line.split(";");
-			                	}else{
-			                		if(tabs==null||fields==null) break;
-				                    String[] columns = line.split(";");
-									productSource.open();
-			                		Product product = productSource.getByNo(columns[0].trim());
-			                		long id = 0;
-				                    if(product!=null){
-				                    	id = product.getId();
-				                    }else{
-				                    	product = new Product();
-										product.setNo(columns[0].trim());
-										id = productSource.create(product);
-				                    }
-									productSource.close();
-									for(int j=0;j<columns.length;j++){
-
-										productSource.open();
-										long ret = productSource.createFields(id, tabs[j].trim(), fields[j].trim(), columns[j].trim());
-
-										productSource.close();
-										ret++;
-									}
-			                	}
-			                }   
-						}
-					}else if (ze.getName().toString().endsWith(".jpeg")||
-							ze.getName().toString().endsWith(".jpg")) { 
-						try{
-							Log.v("Decompress", "Unzipping " + ze.getName());
-							/*
-							ByteArrayOutputStream sb = new ByteArrayOutputStream(); 
-					        long iSize   = 0;
-					        int iReaded = 0;
-							byte buffer[]  = new byte[BLOCKSIZE];
-				            long iTotal  = ze.getSize();
-	
-				            while ((iReaded = zin.read(buffer,0,BLOCKSIZE)) > 0 && ((iSize+=iReaded) <= iTotal) ) 
-				            {   
-				            	sb.write(buffer,0,iReaded);
-				            }
-				            */
-				            Bitmap photo = BitmapFactory.decodeStream(zin);
-				            int width = photo.getWidth();
-				            int height = photo.getHeight();
-				            int maxSize = Math.max(laySize.x, laySize.y);
-				            float scale = 1;
-				            if(width>height){
-				            	if(maxSize<width)
-				            		scale = maxSize/width;
-				            }else{
-				            	if(maxSize<height)
-				            		scale = maxSize/height;
-				            }
-				            width = (int)(scale*width);
-				            height = (int)(scale*height);
-				            Bitmap bitmap = Bitmap.createScaledBitmap(photo,
-				            		width,
-									height, true);
-					        //photo.recycle();
-				            zin.closeEntry(); 
-				            //photo.recycle();
-							productSource.open();
-							String name = "";
-							if(ze.getName().toString().endsWith(".jpeg"))
-								name = ze.getName().replace(".jpeg", "");
-							else
-								name = ze.getName().replace(".jpg", "");
-							name = name.trim();
-							Product product = productSource.getByNo(name);
-							
-							if(product!=null){
-								productSource.updateImage(product.getId(),Helper.bitmapToString(bitmap));
-							}else{
-								product = new Product();
-								product.setNo(name);
-								product.setImage(Helper.bitmapToString(bitmap));
-								productSource.create(product);
-							}
-							productSource.close();
-							bitmap.recycle();
-						}catch(Exception e){
-							Log.e("Decompress", "unzip "+ze.getName(), e); 
-						}
-					}
-			    } 
-				zin.close();
-			}catch(Exception e) {
-				Log.e("Decompress", "unzip", e); 
-				return ERROR;
+			String csv="";
+			try {
+				csv = (new Import(getApplicationContext(),datastoreManager.openDefaultDatastore(),laySize,path)).importFile();
+			} catch (DbxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			
 			if(csv.length()==0){
 		        return NO_CSV;
 			}
@@ -399,7 +367,6 @@ public class MainActivity extends Activity {
 	 * the user.
 	 */
 	public class ExportTask extends AsyncTask<String, Void, Integer> {
-		private int ERROR = -1;
 		private int SUCCESS = 0;
 		protected void onPreExecute() {
 			showWaitDialog("Export Data","Wait");
@@ -407,7 +374,7 @@ public class MainActivity extends Activity {
 
 		@Override
 		protected Integer doInBackground(String... params) {
-			Export export = new Export(MainActivity.this,Environment.getExternalStorageDirectory() + File.separator+"Download"+File.separator+"data.zip");
+			Export export = new Export(getApplicationContext(),datastoreManager,params[0]);
 			return export.makeZip();
 		}
 

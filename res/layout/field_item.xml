@@ -11,6 +11,7 @@
           android:layout_weight="40"
           android:layout_height="wrap_content"
           android:text="No"
+          android:hint="label"
           android:textAppearance="?android:attr/textAppearanceMedium" />
 
       <EditText
@@ -20,5 +21,19 @@
           android:layout_height="wrap_content"
           android:textColorHint="#0000FF"
           android:enabled="false"
+          android:hint="value"
           android:ems="10" />
+      <TextView
+        android:id="@+id/delete"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+		android:clickable="true"
+        android:textColor="#ffffff"
+        android:background="#33b5e5"
+		android:textSize="30sp"
+		android:textStyle="bold"
+		android:padding="5dp"
+		android:textAppearance="?android:attr/textAppearanceMedium"
+		android:text="X"
+		android:visibility="gone"/>
 </LinearLayout>

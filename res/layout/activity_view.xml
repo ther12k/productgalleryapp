@@ -1,4 +1,4 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -6,28 +6,39 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="net.rizkyzulkarnaen.productgallery.ViewActivity" >
+    tools:context="net.rizkyzulkarnaen.productgallery.ViewActivity" 
+    android:orientation="vertical">
 
-    <ImageView
+    <net.rizkyzulkarnaen.productgallery.ZoomImage
         android:id="@+id/image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:src="@drawable/ic_launcher" />
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:src="@drawable/ic_launcher" 
+        android:layout_weight="85"/>
 
-    <TextView
-        android:id="@+id/name"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="5dp"
-        android:gravity="center"
-        android:textColor="#ffffff"
-        android:background="#5033b5e5"
-        android:textSize="18sp"
-        android:padding="10dp"
-        android:text="TextView" />
+	<LinearLayout
+	    android:layout_width="fill_parent"
+	    android:layout_height="0dp"
+	    android:layout_alignBottom="@+id/image"
+	    android:layout_alignLeft="@+id/image"
+	    android:orientation="horizontal"
+	    android:gravity="center"  
+        android:layout_weight="15">
 
-</RelativeLayout>
+	    <HorizontalScrollView
+	        android:id="@+id/scrollImages"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:orientation="horizontal"
+	        android:scrollbars="none" >
+
+	        <LinearLayout
+	            android:id="@+id/imagesLayout"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:orientation="horizontal" >
+	        </LinearLayout>
+	    </HorizontalScrollView>
+	</LinearLayout>
+    
+</LinearLayout>

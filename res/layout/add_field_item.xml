@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal" 
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
+	<EditText
+          android:id="@+id/fieldLabel"
+          android:layout_width="0dp"
+          android:layout_weight="40"
+          android:layout_height="wrap_content"
+          android:textColorHint="#5033b5e5"
+          android:hint="field"
+          android:ems="10" />
+      <EditText
+          android:id="@+id/fieldValue"
+          android:layout_width="0dp"
+          android:layout_weight="60"
+          android:layout_height="wrap_content"
+          android:textColorHint="#5033b5e5"
+          android:hint="value"
+          android:ems="10" />
+      <TextView
+        android:id="@+id/delete"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+		android:clickable="true"
+        android:textColor="#ffffff"
+        android:background="#33b5e5"
+		android:textSize="30sp"
+		android:textStyle="bold"
+		android:padding="5dp"
+		android:textAppearance="?android:attr/textAppearanceMedium"
+		android:text="O"/>
+</LinearLayout>

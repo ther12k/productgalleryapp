@@ -13,8 +13,8 @@ public class Field implements Serializable {
 	private String name;
 	private String category;
 	private String value;
-	private long id;
-	private long article_id;
+	private String id;
+	private String article_id;
 	public String getName() {
 		return name;
 	}
@@ -33,16 +33,16 @@ public class Field implements Serializable {
 	public void setValue(String value) {
 		this.value = value;
 	}
-	public long getId() {
+	public String getId() {
 		return id;
 	}
-	public void setId(long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
-	public long getArticle_id() {
+	public String getArticle_id() {
 		return article_id;
 	}
-	public void setArticle_id(long article_id) {
+	public void setArticle_id(String article_id) {
 		this.article_id = article_id;
 	}
 	

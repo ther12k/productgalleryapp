@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ic_quote">&#xe000;</string>
+    <string name="ic_users">&#xe001;</string>
+    <string name="ic_refresh">&#xf021;</string>
+    <string name="ic_edit">&#xe003;</string>
+    <string name="ic_delete">&#xe004;</string>
+    <string name="ic_open">&#xf07c;</string>
+</resources>

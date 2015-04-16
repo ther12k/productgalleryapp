@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.rizkyzulkarnaen.productgallery.entity.Product;
-import net.rizkyzulkarnaen.productgallery.sql.ProductSource;
-
+import net.rizkyzulkarnaen.productgallery.sql.DropboxProductSource;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Point;
@@ -17,23 +16,22 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.dropbox.sync.android.DbxDatastore;
+
 public class GalleryAdapter extends BaseAdapter {
 	    private List<Product> items = new ArrayList<Product>();
 	    private LayoutInflater inflater;
-	    private Point laySize = null;
-	    private ProductSource productSource;
+	    private DropboxProductSource productSource;
 		private LruCache<String, Bitmap> mMemoryCache;
+		private Point laySize;
 	    
-	    public GalleryAdapter(Context context,Point laySize,LruCache<String, Bitmap> mMemoryCache) {
+	    public GalleryAdapter(Context context,DbxDatastore datastore,Point laySize,LruCache<String, Bitmap> mMemoryCache) {
 	        inflater = LayoutInflater.from(context);
-	        this.laySize = laySize;
 	        this.mMemoryCache = mMemoryCache;
-			productSource = new ProductSource(context);
-			productSource.open();
+	        this.laySize = laySize;
+			productSource = new DropboxProductSource(context,datastore);
 			items = (ArrayList<Product>) productSource.getAll();
-			productSource.close();
 	    }
-
 		
 		public void addBitmapToMemoryCache(String key, Bitmap bitmap) {
 		    if (getBitmapFromMemCache(key) == null) {
@@ -55,9 +53,7 @@ public class GalleryAdapter extends BaseAdapter {
 	    }
 
 	    public Product getItemWImage(int i) {
-			productSource.open();
 			Product product = productSource.get(items.get(i).getId());
-			productSource.close();
 	        return product;
 	    }
 
@@ -92,9 +88,21 @@ public class GalleryAdapter extends BaseAdapter {
 		        	Bitmap photo = item.getImageBitmap();
 		        	int width = photo.getWidth();
 		            int height = photo.getHeight();
-		        	bitmap = Bitmap.createScaledBitmap(photo,
-								width/2,
-								height/2, true);
+		            int maxSize = Math.max(laySize.x, laySize.y);
+		            float scale = 1;
+		            if(width<height){
+		            	if(maxSize<width)
+		            		scale = maxSize/width;
+		            }else{
+		            	if(maxSize<height)
+		            		scale = maxSize/height;
+		            }
+		            width = (int)(scale*width);
+		            height = (int)(scale*height);
+		            bitmap = Bitmap.createScaledBitmap(photo,
+		            		width/2,
+							height/2, true);
+		        	
 		        	addBitmapToMemoryCache(String.valueOf(item.getId()),bitmap);
 		        	picture.setImageBitmap(getBitmapFromMemCache(String.valueOf(item.getId())));
 		        	photo.recycle();

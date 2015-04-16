@@ -1,25 +1,30 @@
 package net.rizkyzulkarnaen.productgallery;
 
+import java.util.List;
+
+import com.dropbox.sync.android.DbxException;
+
+import net.rizkyzulkarnaen.productgallery.entity.Image;
 import net.rizkyzulkarnaen.productgallery.entity.Product;
-import net.rizkyzulkarnaen.productgallery.sql.ProductSource;
+import net.rizkyzulkarnaen.productgallery.sql.DropboxProductSource;
 import android.app.ActionBar;
-import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.view.Display;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.LinearLayout;
 
-public class ViewActivity extends Activity {
+public class ViewActivity extends BasicActivity {
 	private Product item;
 	private Point laySize = null;
-	private ProgressDialog progressDialog;
+	private final int div = 4;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -32,25 +37,178 @@ public class ViewActivity extends Activity {
 		// Enabling Back navigation on Action Bar icon
 		actionBar.setDisplayHomeAsUpEnabled(true);
 
-		ProductSource productSource = new ProductSource(this);
+		DropboxProductSource productSource=null;
+		try {
+			productSource = new DropboxProductSource(this,datastoreManager.openDefaultDatastore());
+		} catch (DbxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         if (bundleExtra != null) {
 			 if(bundleExtra.containsKey("id")){
-				 productSource.open();
-				 item = productSource.get(bundleExtra.getLong("id"));
-				 TextView nameView = (TextView) findViewById(R.id.name);
-				 ImageView imageView = (ImageView) findViewById(R.id.image);
-				 nameView.setText(item.getNo());
+				 item = productSource.get(bundleExtra.getString("id"));
+				 List<Image> images = productSource.getImagesByNo(item.getNo());
+				 //TextView nameView = (TextView) findViewById(R.id.name);
+				 final ZoomImage imageView = (ZoomImage) findViewById(R.id.image);
+				 //nameView.setText(item.getNo());
+				 LayoutInflater layoutInflater = LayoutInflater.from(this);
+				 LinearLayout imagesLayout = (LinearLayout)findViewById(R.id.imagesLayout);
 				 
 				 if(item.getImageBitmap()!=null){
-					Bitmap bitmap = item.getImageBitmap();
-		        	imageView.setImageBitmap(bitmap);
-					actionBar.setLogo(new BitmapDrawable(getResources(), bitmap));
+					final Bitmap photo = item.getImageBitmap();
+					
+					int width = photo.getWidth();
+		            int height = photo.getHeight();
+		            int maxSize = Math.max(laySize.x, laySize.y);
+		            float scale = 1;
+		            if(width<height){
+		            	if(maxSize<width)
+		            		scale = maxSize/width;
+		            }else{
+		            	if(maxSize<height)
+		            		scale = maxSize/height;
+		            }
+		            /*
+		            width = (int)(scale*width);
+		            height = (int)(scale*height);
+		            Bitmap bitmap = Bitmap.createScaledBitmap(photo,
+		            		width,
+							height, true);
+							*/
+		        	imageView.setBitmap(photo);
+					actionBar.setLogo(new BitmapDrawable(getResources(), photo));
 					item.setFields(productSource.getFields(item.getId()));
 		        	//photo.recycle();
 					actionBar.setTitle(item.getNo());
 					imageView.invalidate();
+					/*
+					imageView.setOnClickListener(
+							new View.OnClickListener() {
+								@Override
+								public void onClick(View view) {
+									try{
+										Intent intent = new Intent();
+					            		//bitmap = android.provider.MediaStore.Images.Media.getBitmap(cr, imageUri);
+					            		intent.setAction(android.content.Intent.ACTION_VIEW);
+					            		File outputDir = getApplicationContext().getExternalCacheDir(); // context being the Activity pointer
+					            		File outputFile = File.createTempFile("img", ".jpg", outputDir);
+					            		OutputStream outStream = new FileOutputStream(outputFile);
+					            		photo.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+										outStream.flush();
+										outStream.close();
+					            		intent.setDataAndType(Uri.fromFile(outputFile), "image/*");
+						        		startActivity(intent);
+									}catch(Exception ex){
+										ex.printStackTrace();
+									}
+								}
+							});
+							*/
+					if(images!=null&&images.size()>0){
+						final LinearLayout imageItem= (LinearLayout) layoutInflater.inflate(
+								R.layout.image_item, null);
+						ImageView imageOther = (ImageView) imageItem.findViewById(R.id.image_other);
+						width = (int)(scale/div*width);
+						height = (int)(scale/div*height);
+				        Bitmap smallBitmap = Bitmap.createScaledBitmap(photo,
+				            		width,
+									height, true);
+			            imageOther.setImageBitmap(smallBitmap);
+			            imageOther.invalidate();
+			            imageOther.setOnClickListener(
+								new View.OnClickListener() {
+									@Override
+									public void onClick(View view) {
+							        	imageView.setBitmap(photo);
+							        	/*
+										imageView.invalidate();
+										imageView.setOnClickListener(
+												new View.OnClickListener() {
+													@Override
+													public void onClick(View view) {
+														try{
+															Intent intent = new Intent();
+										            		//bitmap = android.provider.MediaStore.Images.Media.getBitmap(cr, imageUri);
+										            		intent.setAction(android.content.Intent.ACTION_VIEW);
+										            		File outputDir = getApplicationContext().getExternalCacheDir(); // context being the Activity pointer
+										            		File outputFile = File.createTempFile("img", ".jpg", outputDir);
+										            		OutputStream outStream = new FileOutputStream(outputFile);
+										            		photo.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+															outStream.flush();
+															outStream.close();
+										            		intent.setDataAndType(Uri.fromFile(outputFile), "image/*");
+											        		startActivity(intent);
+														}catch(Exception ex){
+															ex.printStackTrace();
+														}
+													}
+												});
+												*/
+									}
+								});
+			            imagesLayout.addView(imageItem);
+					}
+
 				 }
-				 productSource.close();
+				 if(images!=null&&images.size()>0){
+						for(Image image : images){
+							final LinearLayout imageItem= (LinearLayout) layoutInflater.inflate(
+									R.layout.image_item, null);
+							final Bitmap pic = image.getImageBitmap();
+							int width = pic.getWidth();
+				            int height = pic.getHeight();
+				            int maxSize = Math.max(laySize.x, laySize.y);
+				            float scale = 1;
+				            if(width<height){
+				            	if(maxSize<width)
+				            		scale = maxSize/width;
+				            }else{
+				            	if(maxSize<height)
+				            		scale = maxSize/height;
+				            }
+				            width = (int)(scale/div*width);
+				            height = (int)(scale/div*height);
+				            Bitmap bitmap = Bitmap.createScaledBitmap(pic,
+				            		width,
+									height, true);
+
+				            ImageView imageOther = (ImageView) imageItem.findViewById(R.id.image_other);
+				            imageOther.setImageBitmap(bitmap);
+				            imageOther.invalidate();
+				            imageOther.setOnClickListener(
+									new View.OnClickListener() {
+										@Override
+										public void onClick(View view) {
+								        	imageView.setBitmap(pic);
+											imageView.invalidate();
+											/*
+											imageView.setOnClickListener(
+													new View.OnClickListener() {
+														@Override
+														public void onClick(View view) {
+															try{
+																Intent intent = new Intent();
+											            		//bitmap = android.provider.MediaStore.Images.Media.getBitmap(cr, imageUri);
+											            		intent.setAction(android.content.Intent.ACTION_VIEW);
+											            		File outputDir = getApplicationContext().getExternalCacheDir(); // context being the Activity pointer
+											            		File outputFile = File.createTempFile("img", ".jpg", outputDir);
+											            		OutputStream outStream = new FileOutputStream(outputFile);
+											            		pic.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+																outStream.flush();
+																outStream.close();
+											            		intent.setDataAndType(Uri.fromFile(outputFile), "image/*");
+												        		startActivity(intent);
+															}catch(Exception ex){
+																ex.printStackTrace();
+															}
+														}
+													});
+													*/
+										}
+									});
+				            imagesLayout.addView(imageItem);
+						}
+					 }
 			 }
         }
 	}
@@ -60,18 +218,6 @@ public class ViewActivity extends Activity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.view, menu);
 		return true;
-	}
-	protected void showWaitDialog(String title,String message) {
-		
-		try{
-				progressDialog = ProgressDialog.show(ViewActivity.this, title, message,
-					false, false);
-				progressDialog.setIndeterminate(true);
-				progressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.progressbar));
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
 	}
 	@Override
 	public boolean onOptionsItemSelected(MenuItem menuItem) {

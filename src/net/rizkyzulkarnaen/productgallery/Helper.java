@@ -17,7 +17,12 @@ public class Helper {
 		byte[] ba = baos.toByteArray();
 		return Base64.encodeToString(ba, Base64.DEFAULT);
 	}
-
+	public static byte[] bitmapToArray(Bitmap bitmap) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+		byte[] ba = baos.toByteArray();
+		return ba;
+	}
 	public static Bitmap stringToBitmap(String photo) {
 		return stringToBitmap(photo, 0);
 	}

@@ -1,9 +1,10 @@
 package net.rizkyzulkarnaen.productgallery;
 
+import com.dropbox.sync.android.DbxException;
+
 import net.rizkyzulkarnaen.productgallery.entity.Product;
-import net.rizkyzulkarnaen.productgallery.sql.ProductSource;
+import net.rizkyzulkarnaen.productgallery.sql.DropboxProductSource;
 import android.app.ActionBar;
-import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -20,7 +21,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 
-public class AddActivity extends Activity {
+public class AddActivity extends BasicActivity {
 	private static final int PICK_IMAGE = 1;
 	private static final int TAKE_IMAGE = 2;
 	private Product product;
@@ -78,7 +79,13 @@ public class AddActivity extends Activity {
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
 		if (id == R.id.action_save) {
-			ProductSource productSource = new ProductSource(this);
+			DropboxProductSource productSource=null;
+			try {
+				productSource = new DropboxProductSource(this,datastoreManager.openDefaultDatastore());
+			} catch (DbxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			EditText noView = (EditText) findViewById(R.id.productNo);
 			boolean error = false;
 			
@@ -89,9 +96,7 @@ public class AddActivity extends Activity {
 			if(!error){
 				product.setNo(noView.getText().toString());
 				
-				productSource.open();
 				productSource.create(product);
-				productSource.close();
 				setResult(RESULT_OK);
 				finish();
 			}

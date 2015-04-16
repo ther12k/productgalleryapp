@@ -13,30 +13,36 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import com.opencsv.CSVWriter;
-
 import net.rizkyzulkarnaen.productgallery.entity.Field;
+import net.rizkyzulkarnaen.productgallery.entity.Image;
 import net.rizkyzulkarnaen.productgallery.entity.Product;
-import net.rizkyzulkarnaen.productgallery.sql.ProductSource;
+import net.rizkyzulkarnaen.productgallery.sql.DropboxProductSource;
 import android.content.Context;
 import android.util.Base64;
 import android.util.Log;
+
+import com.dropbox.sync.android.DbxDatastoreManager;
+import com.dropbox.sync.android.DbxException;
+import com.opencsv.CSVWriter;
 
 public class Export {
 	private int ERROR = -1;
 	private int SUCCESS = 0;
 	private ZipOutputStream out;
-    private ProductSource productSource;
+    private DropboxProductSource productSource;
     private List<Product> items = new ArrayList<Product>();
     private String path;
     
     protected HashMap<String, ArrayList<String>> tabs = new HashMap<String, ArrayList<String>>();
     
-    public Export(Context context,String path){
-    	productSource = new ProductSource(context);
-    	productSource.open();
+    public Export(Context context,DbxDatastoreManager datastoreManager,String path){
+    	try {
+			productSource = new DropboxProductSource(context,datastoreManager.openDefaultDatastore());
+		} catch (DbxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		items = (ArrayList<Product>) productSource.getAll();
-		productSource.close();
 		this.path = path;
     }
     
@@ -56,14 +62,11 @@ public class Export {
 	        ZipEntry entry = new ZipEntry(product.getNo()+".jpg");
 	        try {
 	            out.putNextEntry(entry);
-	        	productSource.open();
 	        	product = productSource.get(product.getId());
-	    		productSource.close();
 	    		if(product.getImage()!=null)
 	            out.write(Base64.decode(product.getImage(),Base64.DEFAULT));
 	    		out.flush();
-	            Log.v("put", "Adding: ");
-	            productSource.open();
+	            Log.v("put", "Adding: "+product.getNo());
 	            List<Field> productFields = productSource.getFieldsSortByTab(product.getId());
 	            fieldsArray.add(productFields);
 	            for(Field field:productFields){
@@ -79,8 +82,19 @@ public class Export {
 	            		}
 	            	}
 	            }
-	            productSource.close();
 	            out.closeEntry();
+
+				List<Image> images = productSource.getImagesByNo(product.getNo());
+				int n=1;
+				for(Image image:images){
+					entry = new ZipEntry(product.getNo()+"_"+String.valueOf(n)+".jpg");
+					out.putNextEntry(entry); 
+					if(image.getImage()!=null)
+			            out.write(Base64.decode(image.getImage(),Base64.DEFAULT));
+			    	out.flush();
+					n++;
+					out.closeEntry();
+				}
 	        }
 	        catch (IOException e) {
 	            // TODO Auto-generated catch block
@@ -92,9 +106,9 @@ public class Export {
         	Collections.sort(fields);
         	tabs.put(field.getKey(), fields);
         }
+
         ZipEntry entry = new ZipEntry("import.csv"); // create a zip entry and add it to ZipOutputStream
         try {
-			out.putNextEntry(entry);
 			List<String> tabCols = new ArrayList<String>();
 			List<String> fieldCols = new ArrayList<String>();
 			
@@ -124,13 +138,15 @@ public class Export {
 
 		        rowList.add(row.toArray(new String[row.size()]));
 	        }
+			out.putNextEntry(entry);
         	CSVWriter writer = new CSVWriter(new OutputStreamWriter(out),';',CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
-        	writer.writeAll(rowList);  
+        	writer.writeAll(rowList); 
             writer.close();
-            out.closeEntry();
-		} catch (IOException e) {
+            out.closeEntry(); 
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+            return ERROR;
 		}
         try {
             out.close();

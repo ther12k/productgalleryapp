@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">Product Gallery</string>
+    <string name="dropbox_app_key">rs2bsy6v0oaspgr</string><!-- please change on manifest too -->
+    <string name="dropbox_app_secret">b2bq1cdaohrdql4</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="action_menu">[MENU]</string>
     <string name="action_add">ADD</string>
+    <string name="action_link">LINK TO DROPBOX</string>
+    <string name="action_unlink">UNLINK DROPBOX</string>
     <string name="action_clear">CLEAR</string>
     <string name="action_import">IMPORT</string>
     <string name="action_export">EXPORT</string>
@@ -32,4 +36,16 @@
     
     <string name="clear_confirm_title">Clear all data</string>
     <string name="clear_confirm_message">Clear all data</string>
+    <string name="delete_confirm_field_title">Delete field?</string>
+    <string name="delete_confirm_field_message">Delete field </string>
+    <string name="save_confirm_title">Save data</string>
+    <string name="save_confirm_message">Save data : </string>
+    <string name="add_field_btn">Add Field</string>
+    <!-- 
+    
+App key
+rs2bsy6v0oaspgr
+App secret
+b2bq1cdaohrdql4
+ -->
 </resources>

@@ -3,33 +3,37 @@ package net.rizkyzulkarnaen.productgallery;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.dropbox.sync.android.DbxException;
+
 import net.rizkyzulkarnaen.productgallery.entity.Field;
 import net.rizkyzulkarnaen.productgallery.entity.Product;
-import net.rizkyzulkarnaen.productgallery.sql.ProductSource;
+import net.rizkyzulkarnaen.productgallery.sql.DropboxProductSource;
 import android.app.ActionBar;
-import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class InfoActivity extends Activity {
+public class InfoActivity extends BasicActivity {
 	private LinearLayout fieldLayout;
 	private LinearLayout tabsLayout;
 	private List<String> tabs;
 	private boolean edit = false;
-	private ProductSource productSource;
+	private DropboxProductSource productSource;
 	private Product item;
+	private String currentCat;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -45,11 +49,32 @@ public class InfoActivity extends Activity {
         if (bundleExtra != null) {
 			 if(bundleExtra.containsKey("edit")) edit = true;
 			 if(bundleExtra.containsKey("id")){
-				 productSource = new ProductSource(this);
-				 productSource.open();
-				 item = productSource.get(bundleExtra.getLong("id"));
+				 try {
+					productSource = new DropboxProductSource(this,datastoreManager.openDefaultDatastore());
+				} catch (DbxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				 item = productSource.get(bundleExtra.getString("id"));
+				 Bitmap photo = item.getImageBitmap();
+				 int width = photo.getWidth();
+	            int height = photo.getHeight();
+	            int maxSize = Math.max(laySize.x, laySize.y);
+	            float scale = 1;
+	            if(width<height){
+	            	if(maxSize<width)
+	            		scale = maxSize/width;
+	            }else{
+	            	if(maxSize<height)
+	            		scale = maxSize/height;
+	            }
+	            width = (int)(scale*width);
+	            height = (int)(scale*height);
+	            Bitmap bitmap = Bitmap.createScaledBitmap(photo,
+	            		width,
+						height, true);
+	            item.setImageBitmap(bitmap);
 				 List<Field> fields = productSource.getFields(item.getId());
-				 productSource.close();
 				 actionBar.setLogo(new BitmapDrawable(getResources(), item.getImageBitmap()));
 				 actionBar.setTitle(item.getNo());
 				 LayoutInflater layoutInflater = LayoutInflater.from(this);
@@ -57,19 +82,95 @@ public class InfoActivity extends Activity {
 				 fieldLayout = (LinearLayout)findViewById(R.id.fieldLayout);
 				 tabsLayout = (LinearLayout)findViewById(R.id.tabsLayout);
 
-				 String firstTab = "";
+				 final Typeface font = Typeface.createFromAsset(getAssets(), "fontawesome-webfont.ttf");
+				 
+				 if(edit){
+		        	 Button addFieldBtn = (Button)findViewById(R.id.add_field);
+		        	 addFieldBtn.setVisibility(View.VISIBLE);
+		        	 addFieldBtn.setOnClickListener(new OnClickListener() {
+							public void onClick(View v) {
+								 LayoutInflater layoutInflater = LayoutInflater.from(InfoActivity.this);
+								 final LinearLayout fieldItem = (LinearLayout) layoutInflater.inflate(
+										R.layout.add_field_item, null);
+								 final EditText label = (EditText)fieldItem.findViewById(R.id.fieldLabel);
+								 EditText value = (EditText)fieldItem.findViewById(R.id.fieldValue);
+
+								 fieldItem.setTag(new TabId(currentCat,""));
+								 fieldLayout.addView(fieldItem);
+								 TextView delete = (TextView) fieldItem.findViewById(R.id.delete);
+				                 //delete.setTypeface(font);
+				                 //delete.setText(getString(R.string.ic_delete));
+				                 delete.setOnClickListener(new OnClickListener() {
+										public void onClick(View v) {
+											 showYesNoMsg(
+														R.string.delete_confirm_field_title,
+														getString(R.string.delete_confirm_field_message)+" "+label.getText().toString()+"?",
+														new YesNoMsgAction() {
+															@Override
+															public void onYes() {
+																 TabId tag = (TabId)fieldItem.getTag();
+																 tag.setDeleted(true);
+																 fieldItem.setTag(tag);
+																 fieldItem.setVisibility(View.GONE);
+															}
+			
+															@Override
+															public void onNo() {
+																// TODO Auto-generated
+																// method stub
+																return;
+															}
+														});
+										}
+									 });
+							}
+						 });
+		        	 
+				 }
+				 String firstTab = "";			 
 				 int count=0;
 				 for(final Field field:fields){
 					 final LinearLayout fieldItem = (LinearLayout) layoutInflater.inflate(
 								R.layout.field_item, null);
-					 TextView label = (TextView)fieldItem.findViewById(R.id.fieldLabel);
+					 final TextView label = (TextView)fieldItem.findViewById(R.id.fieldLabel);
 					 EditText value = (EditText)fieldItem.findViewById(R.id.fieldValue);
-					 if(count++>1)
-						 if(edit) value.setEnabled(true);
+
+					 if(count++>0 && edit){
+						 value.setEnabled(true);
+						 TextView delete = (TextView) fieldItem.findViewById(R.id.delete);
+		                 //delete.setTypeface(font);
+		                 //delete.setText(getString(R.string.ic_delete));
+		                 delete.setOnClickListener(new OnClickListener() {
+								public void onClick(View v) {
+									 showYesNoMsg(
+												R.string.delete_confirm_field_title,
+												getString(R.string.delete_confirm_field_message)+" "+label.getText().toString()+"?",
+												new YesNoMsgAction() {
+													@Override
+													public void onYes() {
+														 TabId tag = (TabId)fieldItem.getTag();
+														 tag.setDeleted(true);
+														 fieldItem.setTag(tag);
+														 fieldItem.setVisibility(View.GONE);
+													}
+	
+													@Override
+													public void onNo() {
+														// TODO Auto-generated
+														// method stub
+														return;
+													}
+												});
+								}
+							 });
+		                 delete.setVisibility(View.VISIBLE);
+					 }
 					 label.setText(field.getName());
 					 value.setText(field.getValue());
 					 fieldItem.setTag(new TabId(field.getCategory(),field.getId()));
+					 fieldItem.setVisibility(View.VISIBLE);
 					 fieldLayout.addView(fieldItem);
+					 
 					 if(!tabs.contains(field.getCategory())){
 						 if(firstTab.length()==0) firstTab = field.getCategory();
 						 //tab = field.getCategory();
@@ -91,6 +192,7 @@ public class InfoActivity extends Activity {
 								}
 								clearAllBtn();
 								btn.setTextColor(Color.BLACK);
+								currentCat = field.getCategory();
 							}
 						 });
 						 tabs.add(field.getCategory());
@@ -165,36 +267,63 @@ public class InfoActivity extends Activity {
 			return true;
 		}
 		if (id == R.id.action_save) {
-			for(int i=0;i<fieldLayout.getChildCount();i++){
-				LinearLayout row = (LinearLayout)fieldLayout.getChildAt(i);
-				EditText valueView = (EditText)row.findViewById(R.id.fieldValue);
-				String value = valueView.getText().toString();
-				TabId tabId = (TabId)row.getTag();
-				productSource.open();
-				productSource.updateField(tabId.getId(),value);
-				productSource.close();
-			}
-			Intent i = new Intent(InfoActivity.this, InfoActivity.class);
-			i.putExtra("id",item.getId());
-    		startActivity(i);
-			finish();
-			return true;
+			 showYesNoMsg(
+						R.string.save_confirm_title,
+						getString(R.string.save_confirm_message)+" "+item.getNo()+"?",
+						new YesNoMsgAction() {
+							@Override
+							public void onYes() {
+								for(int i=0;i<fieldLayout.getChildCount();i++){
+									LinearLayout row = (LinearLayout)fieldLayout.getChildAt(i);
+									EditText valueView = (EditText)row.findViewById(R.id.fieldValue);
+									String value = valueView.getText().toString();
+									TabId tabId = (TabId)row.getTag();
+									if(tabId.isDeleted()){
+										 productSource.deleteFieldById(tabId.getId());
+									}else{
+										if(tabId.getId()==""){
+											EditText fieldView = (EditText)row.findViewById(R.id.fieldLabel);
+											String field = fieldView.getText().toString();
+											if(!field.isEmpty()&&!value.isEmpty())
+											productSource.createFields(item.getId(), tabId.getTab(), fieldView.getText().toString(), value);
+										}else{
+											productSource.updateField(tabId.getId(),value);
+										}
+									}
+								}
+								Intent i = new Intent(InfoActivity.this, InfoActivity.class);
+								i.putExtra("id",item.getId());
+					    		startActivity(i);
+								finish();
+							}
+
+							@Override
+							public void onNo() {
+								// TODO Auto-generated
+								// method stub
+								return;
+							}
+						});
+				return true;
+				
 		}
 		return super.onOptionsItemSelected(menuItem);
 	}
 	
 	public class TabId{
 		private String tab;
-		private long id = 0;
+		private String field;
+		private boolean deleted;
+		private String id = "";
 		
-		public TabId(String tab, long id){
+		public TabId(String tab, String id){
 			this.id = id;
 			this.setTab(tab);
 		}
-		public long getId() {
+		public String getId() {
 			return id;
 		}
-		public void setId(long id) {
+		public void setId(String id) {
 			this.id = id;
 		}
 		public String getTab() {
@@ -202,6 +331,18 @@ public class InfoActivity extends Activity {
 		}
 		public void setTab(String tab) {
 			this.tab = tab;
+		}
+		public boolean isDeleted() {
+			return deleted;
+		}
+		public void setDeleted(boolean deleted) {
+			this.deleted = deleted;
+		}
+		public String getField() {
+			return field;
+		}
+		public void setField(String field) {
+			this.field = field;
 		}
 	}
 }

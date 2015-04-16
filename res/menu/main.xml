@@ -8,19 +8,31 @@
         android:showAsAction="ifRoom|withText"
         android:title="@string/action_add"/>
 -->
-    <item
-        android:id="@+id/clear_menu"
-        android:orderInCategory="100"
-        android:showAsAction="ifRoom|withText"
-        android:title="@string/action_clear"/>
-    <item
-        android:id="@+id/import_menu"
-        android:orderInCategory="100"
-        android:showAsAction="ifRoom|withText"
-        android:title="@string/action_import"/>
-    <item
-        android:id="@+id/export_menu"
-        android:orderInCategory="100"
-        android:showAsAction="ifRoom|withText"
-        android:title="@string/action_export"/>
+    <item android:id="@+id/action_menu"
+       android:showAsAction="always"
+       android:title="@string/action_menu" >
+	    <menu>
+	        
+		    <item
+		        android:id="@+id/link_menu"
+		        android:orderInCategory="100"
+		        android:showAsAction="ifRoom|withText"
+		        android:title="@string/action_link"/>
+		    <item
+		        android:id="@+id/clear_menu"
+		        android:orderInCategory="100"
+		        android:showAsAction="ifRoom|withText"
+		        android:title="@string/action_clear"/>
+		    <item
+		        android:id="@+id/import_menu"
+		        android:orderInCategory="100"
+		        android:showAsAction="ifRoom|withText"
+		        android:title="@string/action_import"/>
+		    <item
+		        android:id="@+id/export_menu"
+		        android:orderInCategory="100"
+		        android:showAsAction="ifRoom|withText"
+		        android:title="@string/action_export"/>
+	    </menu>
+	</item>
 </menu>

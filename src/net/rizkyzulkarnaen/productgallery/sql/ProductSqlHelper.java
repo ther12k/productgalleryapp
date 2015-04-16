@@ -8,6 +8,7 @@ import android.util.Log;
 public class ProductSqlHelper extends SQLiteOpenHelper {
 
 	public static final String ARTICLE_TABLE = "product";
+	public static final String IMAGE_TABLE = "image";
 	public static final String FIELDS_TABLE = "fields";
 	public static final String ID = "_id";
 	public static final String ARTICLE_ID = "article_id";
@@ -19,7 +20,7 @@ public class ProductSqlHelper extends SQLiteOpenHelper {
 	public static final String DATE = "date";
 
 	private static final String DATABASE_NAME = "product_gallery.db";
-	private static final int DATABASE_VERSION = 5;
+	private static final int DATABASE_VERSION = 6;
 
 	// Database creation sql statement
 	private static final String ARTICLE_CREATE = "create table "
@@ -30,7 +31,14 @@ public class ProductSqlHelper extends SQLiteOpenHelper {
 			+ IMAGE + " text null, "
 			+ DATE + " integer not null " 
 			+ ");";
-	
+	private static final String IMAGE_CREATE = "create table "
+			+ IMAGE_TABLE
+			+ " (" 
+			+ ID + " integer primary key autoincrement, "  
+			+ NO + " text null, " 
+			+ IMAGE + " text null, "
+			+ DATE + " integer not null " 
+			+ ");";
 	private static final String FIELDS_CREATE = "create table "
 			+ FIELDS_TABLE
 			+ " (" 
@@ -51,6 +59,7 @@ public class ProductSqlHelper extends SQLiteOpenHelper {
 		// TODO Auto-generated method stub
 		database.execSQL(ARTICLE_CREATE);
 		database.execSQL(FIELDS_CREATE);
+		database.execSQL(IMAGE_CREATE);
 	}
 
 	@Override
@@ -62,6 +71,7 @@ public class ProductSqlHelper extends SQLiteOpenHelper {
 
 		db.execSQL("DROP TABLE IF EXISTS " + ARTICLE_TABLE+"; "+ ARTICLE_CREATE);
 		db.execSQL("DROP TABLE IF EXISTS " + FIELDS_TABLE+"; "+  FIELDS_CREATE);
+		db.execSQL("DROP TABLE IF EXISTS " + IMAGE_TABLE+"; "+  IMAGE_CREATE);
 		onCreate(db);
 	}
 
